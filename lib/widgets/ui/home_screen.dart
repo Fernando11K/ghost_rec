@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ghost_rec/widgets/ui/record_control.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -39,50 +40,41 @@ class _HomeScreenState extends State<HomeScreen> {
         // Here we take the value from the HomeScreen object that was created by
         // the App.build method, and use it to set our appbar title.
         title: Text(widget.title, style: TextStyle(color: Colors.white)),
-        leading: IconButton(
-          icon: const Icon(Icons.more_vert, color: Colors.white, size: 35,),
-          onPressed: () {},
-        ),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          mainAxisAlignment: .center,
-          children: [
-            Text(
-              isRecording ? 'Encerrar Gravação' : 'Iniciar Gravação',
-              style: TextStyle(color: Colors.red, fontSize: 18),
-            ),
-            IconButton(
-              enableFeedback: false,
-              onPressed: () {
-                changeRecord();
-              },
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.red, width: 2),
-                ),
-                child: Icon(
-                  isRecording ? Icons.stop_circle : Icons.fiber_manual_record,
-                  color: Colors.red,
-                  size: 200,
-                ),
+        //leading: IconButton(icon: const Icon(Icons.more_vert, color: Colors.white, size: 35,),onPressed: () {},),
+        leading: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert, color: Colors.white, size: 35),
+          offset: const Offset(0, 55),
+
+          onSelected: (value) {
+            print(value);
+            // Aqui você trata a ação de cada item
+            if (value == 'settings') {
+              // Exemplo: abrir configurações
+              Navigator.pushNamed(context, "/settings");
+            } else if (value == 'recordings') {
+              // Exemplo: mostrar info
+              print('Informações selecionadas');
+            }
+          },
+          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+            const PopupMenuItem<String>(
+              value: 'settings',
+              child: ListTile(
+                leading: Icon(Icons.settings, color: Colors.black),
+                title: Text('Configurações'),
               ),
-              splashColor: Colors.transparent,
-              highlightColor: const Color.fromARGB(255, 243, 172, 172),
+            ),
+            const PopupMenuItem<String>(
+              value: 'recordings',
+              child: ListTile(
+                leading: Icon(Icons.folder, color: Colors.black),
+                title: Text('Gravações'),
+              ),
             ),
           ],
         ),
       ),
+      body: const RecordControl(),
     );
-  }
-
-  void changeRecord() {
-    setState(() {
-      isRecording = !isRecording;
-    });
   }
 }

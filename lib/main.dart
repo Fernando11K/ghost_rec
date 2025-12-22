@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ghost_rec/widgets/ui/home_screen.dart';
+import 'package:ghost_rec/widgets/ui/settings_screen.dart';
 
 
 void main() {
@@ -13,7 +14,12 @@ class GhostRecApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(      
-      home: HomeScreen(),
+
+      routes: {
+        "/": (context) => const HomeScreen(),
+        "/settings": (context) => const SettingsScreen(),
+      },
+      initialRoute: "/",
     );
   }
 }
