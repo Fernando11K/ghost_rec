@@ -16,6 +16,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   double _duracaoVideo = 5;
   bool _gravacaoSilenciosa = false;
   bool _appProtegido = false;
+  bool _dispositivoLigado = false;
+  String _searchQuery = '';
 
   // ===== LABELS =====
   String get idiomaLabel {
@@ -164,7 +166,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   EdgeInsets.symmetric(horizontal: 16),
                 ),
                 onTap: controller.openView,
-                onChanged: (_) => controller.openView(),
+                onChanged: (value) {
+                  setState(() => _searchQuery = value.toLowerCase());
+                  controller.openView();
+                },
                 leading: const Icon(Icons.search),
               );
             },
@@ -178,12 +183,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             settingsItem(
               icon: Icons.language,
               title: 'Idioma',
-              subtitle: '($idiomaLabel)',
+              subtitle: '$idiomaLabel',
               onTap: _showIdiomaModal,
             ),
             settingsItem(
-              icon: Icons.text_fields,
-              title: 'Tamanho ($_tamanhoPreview)',
+              icon: Icons.crop_original,
+              title: 'Tamanho da pré-visualização',
               subtitle: '($_tamanhoPreview)',
               onTap: _showTamanhoModal,
             ),
@@ -219,18 +224,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   setState(() => _gravacaoSilenciosa = v ?? false),
               title: const Text('Gravação silenciosa'),
               secondary: const Icon(Icons.volume_off),
-            ),            
+            ),
             CheckboxListTile(
               value: _appProtegido,
               onChanged: (v) => setState(() => _appProtegido = v ?? false),
               title: const Text('App protegido'),
-              subtitle: Text(_appProtegido ? 'Protegido' : 'Não protegido'),
               secondary: const Icon(Icons.lock),
             ),
-            settingsItem(
-              icon: Icons.screen_lock_portrait,
-              title: 'Manter dispositivo ligado',
-              onTap: () {},
+            CheckboxListTile(
+              value: _dispositivoLigado,
+              onChanged: (v) => setState(() => _dispositivoLigado = v ?? false),
+              title: const Text('Manter dispositivo ligado'),
+              secondary: const Icon(Icons.screen_lock_portrait),
             ),
           ]),
 
@@ -261,7 +266,7 @@ Widget settingsItem({
   VoidCallback? onTap,
 }) {
   return ListTile(
-    leading: Icon(icon, color: Colors.grey.shade700),
+    leading: Icon(icon, color: Colors.grey),
     title: Text(title, style: const TextStyle(fontSize: 16)),
     subtitle: Text(subtitle ?? ''),
     trailing: const Icon(Icons.chevron_right),
@@ -279,3 +284,9 @@ Widget settingsGroup(List<Widget> children) {
     child: Column(children: children),
   );
 }
+
+// List<Widget> _buildGeralSettings() {
+// final items = [
+  
+// ]
+// }
