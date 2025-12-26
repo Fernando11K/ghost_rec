@@ -23,36 +23,20 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isRecording = false;
 
   @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+  Widget build(BuildContext context) {    
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Colors.black,
-        // Here we take the value from the HomeScreen object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title, style: TextStyle(color: Colors.white)),
-        //leading: IconButton(icon: const Icon(Icons.more_vert, color: Colors.white, size: 35,),onPressed: () {},),
+        centerTitle: true,        
+        backgroundColor: Colors.black,        
+        title: Text(widget.title, style: TextStyle(color: Colors.white)),        
         leading: PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white, size: 35),
           offset: const Offset(0, 55),
 
-          onSelected: (value) {
-            print(value);
-            // Aqui você trata a ação de cada item
-            if (value == 'settings') {
-              // Exemplo: abrir configurações
+          onSelected: (value) {                        
+            if (value == 'settings') {              
               Navigator.pushNamed(context, "/settings");
-            } else if (value == 'recordings') {
-              // Exemplo: mostrar info
+            } else if (value == 'recordings') {              
               print('Informações selecionadas');
             }
           },

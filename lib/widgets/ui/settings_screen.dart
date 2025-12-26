@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:ghost_rec/utils/labels.dart';
+import 'package:ghost_rec/widgets/ui/modals/radio_modal.dart';
+import 'package:ghost_rec/widgets/ui/settings/settings_group.dart';
+import 'package:ghost_rec/widgets/ui/settings/settings_item.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -10,38 +14,25 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   // ===== ESTADO =====
   String _idioma = 'pt_BR';
-  String _tamanhoPreview = 'Normal';
+  String _tamanhoPrevisualizacao = 'Normal';
   String _camera = 'Traseira';
   String _qualidadeVideo = 'Alta';
   double _duracaoVideo = 5;
   bool _gravacaoSilenciosa = false;
   bool _appProtegido = false;
   bool _dispositivoLigado = false;
-  String _searchQuery = '';
-
-  // ===== LABELS =====
-  String get idiomaLabel {
-    switch (_idioma) {
-      case 'pt_BR':
-        return 'Português (Portuguese)';
-      case 'en_US':
-        return 'English';
-      case 'gn_BR':
-        return "Português de Portugal (Brazilian Guyanese)";
-      default:
-        return '';
-    }
-  }
+  String _pesquisa = '';
 
   // ===== MODAIS =====
 
-  void _showIdiomaModal() {
-    _showRadioModal(
+  void _showlanguageModal() {
+    showRadioModal(
+      context: context,
       title: 'Idioma',
       value: _idioma,
       options: const {
         'pt_BR': 'Português (Portuguese)',
-        'en_US': 'English',
+        'en_US': 'Inglês (English)',
         'gn_BR': "Português de Portugal (Brazilian Guyanese)",
       },
       onChanged: (v) => setState(() => _idioma = v),
@@ -49,20 +40,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showTamanhoModal() {
-    _showRadioModal(
+    showRadioModal(
+      context: context,
       title: 'Tamanho da visualização',
-      value: _tamanhoPreview,
+      value: _tamanhoPrevisualizacao,
       options: const {
         'Pequeno': 'Pequeno',
         'Normal': 'Normal',
         'Grande': 'Grande',
       },
-      onChanged: (v) => setState(() => _tamanhoPreview = v),
+      onChanged: (v) => setState(() => _tamanhoPrevisualizacao = v),
     );
   }
 
   void _showCameraModal() {
-    _showRadioModal(
+    showRadioModal(
+      context: context,
       title: 'Câmera de vídeo',
       value: _camera,
       options: const {'Frontal': 'Frontal', 'Traseira': 'Traseira'},
@@ -71,7 +64,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showQualidadeModal() {
-    _showRadioModal(
+    showRadioModal(
+      context: context,
       title: 'Qualidade de vídeo',
       value: _qualidadeVideo,
       options: const {'Baixa': 'Baixa', 'Média': 'Média', 'Alta': 'Alta'},
@@ -80,67 +74,56 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showDuracaoModal() {
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      builder: (_) {
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Duração: ${_duracaoVideo.round()} min',
-                style: const TextStyle(fontSize: 16),
-              ),
-              Slider(
-                value: _duracaoVideo,
-                min: 1,
-                max: 60,
-                divisions: 59,
-                label: '${_duracaoVideo.round()} min',
-                onChanged: (v) => setState(() => _duracaoVideo = v),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+      builder: (context) {
+        double duracaoTemp = _duracaoVideo;
 
-  // ===== MODAL GENÉRICO RADIO =====
-  void _showRadioModal({
-    required String title,
-    required String value,
-    required Map<String, String> options,
-    required ValueChanged<String> onChanged,
-  }) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return RadioGroup<String>(
-          groupValue: value,
-          onChanged: (v) {
-            onChanged(v!);
-            Navigator.pop(context);
-          },
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return AlertDialog(
+              title: const Text(
+                'Duração do vídeo',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '${duracaoTemp.round()} min',
+                    style: const TextStyle(fontSize: 16),
                   ),
+                  Slider(
+                    value: duracaoTemp,
+                    min: 1,
+                    max: 60,
+                    divisions: 59,
+                    label: '${duracaoTemp.round()} min',
+                    onChanged: (v) {
+                      setStateDialog(() {
+                        duracaoTemp = v;
+                      });
+                    },
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancelar'),
                 ),
-              ),
-              ...options.entries.map(
-                (e) => RadioListTile(value: e.key, title: Text(e.value)),
-              ),
-            ],
-          ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _duracaoVideo = duracaoTemp;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('OK'),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -167,7 +150,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
                 onTap: controller.openView,
                 onChanged: (value) {
-                  setState(() => _searchQuery = value.toLowerCase());
+                  setState(() => _pesquisa = value.toLowerCase());
                   controller.openView();
                 },
                 leading: const Icon(Icons.search),
@@ -179,114 +162,91 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 16),
 
           // GERAL
-          settingsGroup([
-            settingsItem(
-              icon: Icons.language,
-              title: 'Idioma',
-              subtitle: '$idiomaLabel',
-              onTap: _showIdiomaModal,
-            ),
-            settingsItem(
-              icon: Icons.crop_original,
-              title: 'Tamanho da pré-visualização',
-              subtitle: '($_tamanhoPreview)',
-              onTap: _showTamanhoModal,
-            ),
-          ]),
+          SettingsGroup(
+            children: [
+              SettingsItem(
+                icon: Icons.language,
+                title: 'Idioma',
+                subtitle: languageLabel(_idioma),
+                onTap: _showlanguageModal,
+              ),
+              SettingsItem(
+                icon: Icons.crop_original,
+                title: 'Tamanho da pré-visualização',
+                subtitle: '($_tamanhoPrevisualizacao)',
+                onTap: _showTamanhoModal,
+              ),
+            ],
+          ),
 
           // VÍDEO
-          settingsGroup([
-            settingsItem(
-              icon: Icons.videocam,
-              title: 'Câmera de gravação',
-              subtitle: '($_camera)',
-              onTap: _showCameraModal,
-            ),
-            settingsItem(
-              icon: Icons.high_quality,
-              title: 'Qualidade do Vídeo',
-              subtitle: '($_qualidadeVideo)',
-              onTap: _showQualidadeModal,
-            ),
-            settingsItem(
-              icon: Icons.timer,
-              title: 'Duração',
-              subtitle: '(${_duracaoVideo.round()} min)',
-              onTap: _showDuracaoModal,
-            ),
-          ]),
+          SettingsGroup(
+            children: [
+              SettingsItem(
+                icon: Icons.videocam,
+                title: 'Câmera de gravação',
+                subtitle: '($_camera)',
+                onTap: _showCameraModal,
+              ),
+              SettingsItem(
+                icon: Icons.high_quality,
+                title: 'Qualidade do Vídeo',
+                subtitle: '($_qualidadeVideo)',
+                onTap: _showQualidadeModal,
+              ),
+              SettingsItem(
+                icon: Icons.timer,
+                title: 'Duração',
+                subtitle: '(${_duracaoVideo.round()} min)',
+                onTap: _showDuracaoModal,
+              ),
+            ],
+          ),
 
           // SEGURANÇA
-          settingsGroup([
-            CheckboxListTile(
-              value: _gravacaoSilenciosa,
-              onChanged: (v) =>
-                  setState(() => _gravacaoSilenciosa = v ?? false),
-              title: const Text('Gravação silenciosa'),
-              secondary: const Icon(Icons.volume_off),
-            ),
-            CheckboxListTile(
-              value: _appProtegido,
-              onChanged: (v) => setState(() => _appProtegido = v ?? false),
-              title: const Text('App protegido'),
-              secondary: const Icon(Icons.lock),
-            ),
-            CheckboxListTile(
-              value: _dispositivoLigado,
-              onChanged: (v) => setState(() => _dispositivoLigado = v ?? false),
-              title: const Text('Manter dispositivo ligado'),
-              secondary: const Icon(Icons.screen_lock_portrait),
-            ),
-          ]),
+          SettingsGroup(
+            children: [
+              CheckboxListTile(
+                value: _gravacaoSilenciosa,
+                onChanged: (v) =>
+                    setState(() => _gravacaoSilenciosa = v ?? false),
+                title: const Text('Gravação silenciosa'),
+                secondary: const Icon(Icons.volume_off),
+              ),
+              CheckboxListTile(
+                value: _appProtegido,
+                onChanged: (v) => setState(() => _appProtegido = v ?? false),
+                title: const Text('App protegido'),
+                secondary: const Icon(Icons.lock),
+              ),
+              CheckboxListTile(
+                value: _dispositivoLigado,
+                onChanged: (v) =>
+                    setState(() => _dispositivoLigado = v ?? false),
+                title: const Text('Manter dispositivo ligado'),
+                secondary: const Icon(Icons.screen_lock_portrait),
+              ),
+            ],
+          ),
 
           // SOBRE
-          settingsGroup([
-            settingsItem(
-              icon: Icons.star_rate,
-              title: 'Avaliar aplicativo',
-              onTap: () {},
-            ),
-            settingsItem(
-              icon: Icons.privacy_tip,
-              title: 'Política de privacidade',
-              onTap: () {},
-            ),
-          ]),
+          SettingsGroup(
+            children: [
+              SettingsItem(
+                icon: Icons.star_rate,
+                title: 'Avaliar aplicativo',
+                onTap: () {},
+              ),
+              SettingsItem(
+                icon: Icons.privacy_tip,
+                title: 'Política de privacidade',
+                onTap: () {},
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-// ===== HELPERS =====
-Widget settingsItem({
-  required IconData icon,
-  required String title,
-  String? subtitle,
-  VoidCallback? onTap,
-}) {
-  return ListTile(
-    leading: Icon(icon, color: Colors.grey),
-    title: Text(title, style: const TextStyle(fontSize: 16)),
-    subtitle: Text(subtitle ?? ''),
-    trailing: const Icon(Icons.chevron_right),
-    onTap: onTap,
-  );
-}
-
-Widget settingsGroup(List<Widget> children) {
-  return Container(
-    margin: const EdgeInsets.only(bottom: 16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
-    ),
-    child: Column(children: children),
-  );
-}
-
-// List<Widget> _buildGeralSettings() {
-// final items = [
-  
-// ]
-// }
