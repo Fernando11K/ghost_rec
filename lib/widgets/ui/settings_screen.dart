@@ -22,10 +22,136 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _appProtegido = false;
   bool _dispositivoLigado = false;
   String _pesquisa = '';
+  List<Widget> get listaDeConfiguracoes => [
+    SearchBar(
+      hintText: "Pesquisar nas Configurações",
+      elevation: const WidgetStatePropertyAll(0),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 16),
+      ),
+      onChanged: (value) {
+        setState(() => _pesquisa = value.toLowerCase());
+      },
+      leading: const Icon(Icons.search),
+    ),
 
-  // ===== MODAIS =====
+    // GERAL
+    SettingsGroup(
+      children: [
+        SettingsItem(
+          icon: Icons.language,
+          title: 'Idioma',
+          subtitle: languageLabel(_idioma),
+          onTap: _showlanguageModal,
+        ),
+        SettingsItem(
+          icon: Icons.crop_original,
+          title: 'Tamanho da pré-visualização',
+          subtitle: '($_tamanhoPrevisualizacao)',
+          onTap: _showTamanhoModal,
+        ),
+      ],
+    ),
 
-  void _showlanguageModal() {    
+    // VÍDEO
+    SettingsGroup(
+      children: [
+        SettingsItem(
+          icon: Icons.videocam,
+          title: 'Câmera de gravação',
+          subtitle: '($_camera)',
+          onTap: _showCameraModal,
+        ),
+        SettingsItem(
+          icon: Icons.high_quality,
+          title: 'Qualidade do Vídeo',
+          subtitle: '($_qualidadeVideo)',
+          onTap: _showQualidadeModal,
+        ),
+        SettingsItem(
+          icon: Icons.timer,
+          title: 'Duração',
+          subtitle: '(${_duracaoVideo.round()} min)',
+          onTap: _showDuracaoModal,
+        ),
+      ],
+    ),
+
+    // SEGURANÇA
+    SettingsGroup(
+      children: [
+        CheckboxListTile(
+          value: _gravacaoSilenciosa,
+          onChanged: (v) => setState(() => _gravacaoSilenciosa = v ?? false),
+          title: const Text('Gravação silenciosa'),
+          secondary: const Icon(Icons.volume_off),
+        ),
+        CheckboxListTile(
+          value: _appProtegido,
+          onChanged: (v) => setState(() => _appProtegido = v ?? false),
+          title: const Text('App protegido'),
+          secondary: const Icon(Icons.lock),
+        ),
+        CheckboxListTile(
+          value: _dispositivoLigado,
+          onChanged: (v) => setState(() => _dispositivoLigado = v ?? false),
+          title: const Text('Manter dispositivo ligado'),
+          secondary: const Icon(Icons.screen_lock_portrait),
+        ),
+      ],
+    ),
+
+    // SOBRE
+    SettingsGroup(
+      children: [
+        SettingsItem(
+          icon: Icons.star_rate,
+          title: 'Avaliar aplicativo',
+          onTap: () {},
+        ),
+        SettingsItem(
+          icon: Icons.privacy_tip,
+          title: 'Política de privacidade',
+          onTap: () {},
+        ),
+      ],
+    ),
+  ];
+
+  List<Widget> get listaFiltrada {
+    if (_pesquisa.isEmpty) return listaDeConfiguracoes;
+
+    final termo = _pesquisa.toLowerCase();
+
+    return listaDeConfiguracoes
+        .map((widget) {
+          // Mantém a SearchBar sempre visível
+          if (widget is SearchBar) return widget;
+
+          if (widget is SettingsGroup) {
+            final itensFiltrados = widget.children.where((child) {
+              if (child is SettingsItem) {
+                return child.title.toLowerCase().contains(termo);
+              }
+              if (child is CheckboxListTile) {
+                final text = (child.title as Text?)?.data ?? '';
+                return text.toLowerCase().contains(termo);
+              }
+              return false;
+            }).toList();
+
+            if (itensFiltrados.isEmpty) return null;
+
+            return SettingsGroup(children: itensFiltrados);
+          }
+
+          return null;
+        })
+        .whereType<Widget>()
+        .toList();
+  }
+
+  void _showlanguageModal() {
     showRadioModal(
       context: context,
       title: 'Idioma',
@@ -134,119 +260,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Configurações')),
-      body: ListView(
+      body: ListView.builder(
         padding: const EdgeInsets.all(12),
-        children: [
-          // SEARCH
-          SearchAnchor(
-            isFullScreen: true,
-            builder: (context, controller) {
-              return SearchBar(
-                hintText: "Pesquisar nas Configurações",
-                controller: controller,
-                elevation: const WidgetStatePropertyAll(0),
-                padding: const WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 16),
-                ),
-                onTap: controller.openView,
-                onChanged: (value) {
-                  setState(() => _pesquisa = value.toLowerCase());
-                  controller.openView();
-                },
-                leading: const Icon(Icons.search),
-              );
-            },
-            suggestionsBuilder: (_, __) => const [],
-          ),
-
-          const SizedBox(height: 16),
-
-          // GERAL
-          SettingsGroup(
-            children: [
-              SettingsItem(
-                icon: Icons.language,
-                title: 'Idioma',
-                subtitle: languageLabel(_idioma),
-                onTap: _showlanguageModal,
-              ),
-              SettingsItem(
-                icon: Icons.crop_original,
-                title: 'Tamanho da pré-visualização',
-                subtitle: '($_tamanhoPrevisualizacao)',
-                onTap: _showTamanhoModal,
-              ),
-            ],
-          ),
-
-          // VÍDEO
-          SettingsGroup(
-            children: [
-              SettingsItem(
-                icon: Icons.videocam,
-                title: 'Câmera de gravação',
-                subtitle: '($_camera)',
-                onTap: _showCameraModal,
-              ),
-              SettingsItem(
-                icon: Icons.high_quality,
-                title: 'Qualidade do Vídeo',
-                subtitle: '($_qualidadeVideo)',
-                onTap: _showQualidadeModal,
-              ),
-              SettingsItem(
-                icon: Icons.timer,
-                title: 'Duração',
-                subtitle: '(${_duracaoVideo.round()} min)',
-                onTap: _showDuracaoModal,
-              ),
-            ],
-          ),
-
-          // SEGURANÇA
-          SettingsGroup(
-            children: [
-              CheckboxListTile(
-                value: _gravacaoSilenciosa,
-                onChanged: (v) =>
-                    setState(() => _gravacaoSilenciosa = v ?? false),
-                title: const Text('Gravação silenciosa'),
-                secondary: const Icon(Icons.volume_off),
-              ),
-              CheckboxListTile(
-                value: _appProtegido,
-                onChanged: (v) => setState(() => _appProtegido = v ?? false),
-                title: const Text('App protegido'),
-                secondary: const Icon(Icons.lock),
-              ),
-              CheckboxListTile(
-                value: _dispositivoLigado,
-                onChanged: (v) =>
-                    setState(() => _dispositivoLigado = v ?? false),
-                title: const Text('Manter dispositivo ligado'),
-                secondary: const Icon(Icons.screen_lock_portrait),
-              ),
-            ],
-          ),
-
-          // SOBRE
-          SettingsGroup(
-            children: [
-              SettingsItem(
-                icon: Icons.star_rate,
-                title: 'Avaliar aplicativo',
-                onTap: () {},
-              ),
-              SettingsItem(
-                icon: Icons.privacy_tip,
-                title: 'Política de privacidade',
-                onTap: () {},
-              ),
-            ],
-          ),
-        ],
+        itemCount: listaFiltrada.length,
+        itemBuilder: (_, int index) {
+          return listaFiltrada[index];
+        },
       ),
     );
   }
 }
-
