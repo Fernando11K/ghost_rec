@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:ghost_rec/utils/labels.dart';
 import 'package:ghost_rec/widgets/ui/modals/radio_modal.dart';
@@ -22,19 +24,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _appProtegido = false;
   bool _dispositivoLigado = false;
   String _pesquisa = '';
-  List<Widget> get listaDeConfiguracoes => [
-    SearchBar(
-      hintText: "Pesquisar nas Configurações",
-      elevation: const WidgetStatePropertyAll(0),
-      padding: const WidgetStatePropertyAll(
-        EdgeInsets.symmetric(horizontal: 16),
-      ),
-      onChanged: (value) {
-        setState(() => _pesquisa = value.toLowerCase());
-      },
-      leading: const Icon(Icons.search),
-    ),
 
+  Timer? _debounce;
+
+  void _onSearchChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _pesquisa = value.toLowerCase();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  List<Widget> get listaDeConfiguracoes => [
     // GERAL
     SettingsGroup(
       children: [
@@ -43,12 +51,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Idioma',
           subtitle: languageLabel(_idioma),
           onTap: _showlanguageModal,
+          iconColor: Colors.blue,
         ),
         SettingsItem(
           icon: Icons.crop_original,
           title: 'Tamanho da pré-visualização',
           subtitle: '($_tamanhoPrevisualizacao)',
           onTap: _showTamanhoModal,
+          iconColor: Colors.deepPurpleAccent,
         ),
       ],
     ),
@@ -61,18 +71,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Câmera de gravação',
           subtitle: '($_camera)',
           onTap: _showCameraModal,
+          iconColor: Colors.red,
         ),
         SettingsItem(
           icon: Icons.high_quality,
           title: 'Qualidade do Vídeo',
           subtitle: '($_qualidadeVideo)',
           onTap: _showQualidadeModal,
+          iconColor: Colors.green,
         ),
         SettingsItem(
           icon: Icons.timer,
           title: 'Duração',
           subtitle: '(${_duracaoVideo.round()} min)',
           onTap: _showDuracaoModal,
+          iconColor: Colors.orange,
         ),
       ],
     ),
@@ -108,6 +121,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.star_rate,
           title: 'Avaliar aplicativo',
           onTap: () {},
+          iconColor: Colors.amber,
         ),
         SettingsItem(
           icon: Icons.privacy_tip,
@@ -125,9 +139,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return listaDeConfiguracoes
         .map((widget) {
-          // Mantém a SearchBar sempre visível
-          if (widget is SearchBar) return widget;
-
           if (widget is SettingsGroup) {
             final itensFiltrados = widget.children.where((child) {
               if (child is SettingsItem) {
@@ -211,12 +222,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               title: const Text(
                 'Duração do vídeo',
                 style: TextStyle(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     '${duracaoTemp.round()} min',
+                    textAlign: TextAlign.center,
                     style: const TextStyle(fontSize: 16),
                   ),
                   Slider(
@@ -230,13 +243,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         duracaoTemp = v;
                       });
                     },
+                    activeColor: Colors.blue,
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancelar'),
+                  child: const Text(
+                    'Cancelar',
+                    style: TextStyle(color: Colors.red),
+                  ),
                 ),
                 TextButton(
                   onPressed: () {
@@ -245,7 +262,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     });
                     Navigator.pop(context);
                   },
-                  child: const Text('OK'),
+                  child: const Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ],
             );
@@ -260,13 +283,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Configurações')),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(12),
-        itemCount: listaFiltrada.length,
-        itemBuilder: (_, int index) {
-          return listaFiltrada[index];
-        },
+      body: Column(
+        children: [
+          Padding(padding: const EdgeInsets.all(12), child: _buildSearchBar()),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(12),
+              itemCount: listaFiltrada.length,
+              itemBuilder: (_, int index) {
+                return listaFiltrada[index];
+              },
+            ),
+          ),
+        ],
       ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return SearchBar(
+      hintText: "Pesquisar nas Configurações",
+      elevation: const WidgetStatePropertyAll(0),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 16),
+      ),
+      leading: const Icon(Icons.search),
+      onChanged: _onSearchChanged,
     );
   }
 }
