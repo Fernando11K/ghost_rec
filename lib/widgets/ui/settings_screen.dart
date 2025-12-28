@@ -25,15 +25,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // ===== MODAIS =====
 
-  void _showlanguageModal() {
+  void _showlanguageModal() {    
     showRadioModal(
       context: context,
       title: 'Idioma',
       value: _idioma,
       options: const {
         'pt_BR': 'Português (Portuguese)',
-        'en_US': 'Inglês (English)',
         'gn_BR': "Português de Portugal (Brazilian Guyanese)",
+        'en_US': 'Inglês (English)',
       },
       onChanged: (v) => setState(() => _idioma = v),
     );

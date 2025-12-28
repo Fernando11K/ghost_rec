@@ -29,7 +29,7 @@ Future<void> showRadioModal({
                     value: e.key,
                     title: Text(
                       e.value,
-                      maxLines: 1,
+                      maxLines: 4,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
