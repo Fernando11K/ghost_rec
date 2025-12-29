@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-Future<void> showRadioModal({
+Future<void> showRadioDialog({
   required BuildContext context,
   required String title,
   required String value,

@@ -1,12 +1,14 @@
-  String languageLabel (String language) {
-    switch (language) {
-      case 'pt_BR':
-        return 'Português  (Original Portuguese)';
-      case 'gn_BR':
-        return "Português de Portugal (Brazilian Guyanese)";
-      case 'en_US':
-        return 'Inglês (English)';
-      default:
-        return '';
-    }
+String languageLabel(String language) {
+  switch (language) {
+    case 'pt_BR':
+      return 'Português (Portuguese)';
+    case 'pt_PT':
+      return 'Português de Portugal (Brazilian Guyanese)';
+    case 'en_US':
+      return 'Inglês (English)';
+    case 'es_ES':
+      return 'Espanhol (Spanish)';
+    default:
+      return 'Inglês (English)';
   }
+}

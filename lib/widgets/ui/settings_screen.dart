@@ -2,7 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ghost_rec/utils/labels.dart';
-import 'package:ghost_rec/widgets/ui/modals/radio_modal.dart';
+import 'package:ghost_rec/widgets/ui/settings/dialog/duration_dialog.dart';
+import 'package:ghost_rec/widgets/ui/settings/dialog/password_dialog.dart';
+import 'package:ghost_rec/widgets/ui/settings/dialog/radio_dialog.dart';
 import 'package:ghost_rec/widgets/ui/settings/settings_group.dart';
 import 'package:ghost_rec/widgets/ui/settings/settings_item.dart';
 
@@ -21,9 +23,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _qualidadeVideo = 'Alta';
   double _duracaoVideo = 5;
   bool _gravacaoSilenciosa = false;
-  bool _appProtegido = false;
   bool _dispositivoLigado = false;
   String _pesquisa = '';
+  bool _appProtegido = false;
+  String _senha = '';
 
   Timer? _debounce;
 
@@ -50,14 +53,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.language,
           title: 'Idioma',
           subtitle: languageLabel(_idioma),
-          onTap: _showlanguageModal,
+          onTap: _showlanguageDialog,
           iconColor: Colors.blue,
         ),
         SettingsItem(
           icon: Icons.crop_original,
           title: 'Tamanho da pré-visualização',
           subtitle: '($_tamanhoPrevisualizacao)',
-          onTap: _showTamanhoModal,
+          onTap: _showTamanhoDialog,
           iconColor: Colors.deepPurpleAccent,
         ),
       ],
@@ -70,21 +73,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.videocam,
           title: 'Câmera de gravação',
           subtitle: '($_camera)',
-          onTap: _showCameraModal,
+          onTap: _showCameraDialog,
           iconColor: Colors.red,
         ),
         SettingsItem(
           icon: Icons.high_quality,
           title: 'Qualidade do Vídeo',
           subtitle: '($_qualidadeVideo)',
-          onTap: _showQualidadeModal,
+          onTap: _showQualidadeDialog,
           iconColor: Colors.green,
         ),
         SettingsItem(
           icon: Icons.timer,
           title: 'Duração',
           subtitle: '(${_duracaoVideo.round()} min)',
-          onTap: _showDuracaoModal,
+          onTap: _showDuracaoDialog,
           iconColor: Colors.orange,
         ),
       ],
@@ -99,11 +102,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: const Text('Gravação silenciosa'),
           secondary: const Icon(Icons.volume_off),
         ),
-        CheckboxListTile(
-          value: _appProtegido,
-          onChanged: (v) => setState(() => _appProtegido = v ?? false),
-          title: const Text('App protegido'),
-          secondary: const Icon(Icons.lock),
+        SettingsItem(
+          title: 'App protegido',
+          subtitle: _appProtegido ? 'Protegido' : 'Não protegido',
+          icon: Icons.lock,
+          onTap: _onAppProtegidoTap,
+          iconColor: Colors.black,
         ),
         CheckboxListTile(
           value: _dispositivoLigado,
@@ -162,8 +166,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         .toList();
   }
 
-  void _showlanguageModal() {
-    showRadioModal(
+  void _showlanguageDialog() {
+    showRadioDialog(
       context: context,
       title: 'Idioma',
       value: _idioma,
@@ -171,13 +175,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         'pt_BR': 'Português (Portuguese)',
         'gn_BR': "Português de Portugal (Brazilian Guyanese)",
         'en_US': 'Inglês (English)',
+        'es_ES': 'Espanhol (Spanish)',
       },
       onChanged: (v) => setState(() => _idioma = v),
     );
   }
 
-  void _showTamanhoModal() {
-    showRadioModal(
+  void _showTamanhoDialog() {
+    showRadioDialog(
       context: context,
       title: 'Tamanho da visualização',
       value: _tamanhoPrevisualizacao,
@@ -190,8 +195,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showCameraModal() {
-    showRadioModal(
+  void _showCameraDialog() {
+    showRadioDialog(
       context: context,
       title: 'Câmera de vídeo',
       value: _camera,
@@ -200,8 +205,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showQualidadeModal() {
-    showRadioModal(
+  void _showQualidadeDialog() {
+    showRadioDialog(
       context: context,
       title: 'Qualidade de vídeo',
       value: _qualidadeVideo,
@@ -210,79 +215,52 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showDuracaoModal() {
-    showDialog(
+  Future<void> _showDuracaoDialog() async {
+    final resultado = await showDialog<double>(
       context: context,
-      builder: (context) {
-        double duracaoTemp = _duracaoVideo;
-
-        return StatefulBuilder(
-          builder: (context, setStateDialog) {
-            return AlertDialog(
-              title: const Text(
-                'Duração do vídeo',
-                style: TextStyle(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${duracaoTemp.round()} min',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                  Slider(
-                    value: duracaoTemp,
-                    min: 1,
-                    max: 60,
-                    divisions: 59,
-                    label: '${duracaoTemp.round()} min',
-                    onChanged: (v) {
-                      setStateDialog(() {
-                        duracaoTemp = v;
-                      });
-                    },
-                    activeColor: Colors.blue,
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    'Cancelar',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () {
-                    setState(() {
-                      _duracaoVideo = duracaoTemp;
-                    });
-                    Navigator.pop(context);
-                  },
-                  child: const Text(
-                    'OK',
-                    style: TextStyle(
-                      color: Colors.blue,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => DurationVideoDialog(initialvalue: _duracaoVideo),
     );
+
+    if (resultado != null) {
+      setState(() {
+        _duracaoVideo = resultado;
+      });
+    }
+  }
+
+  Future<void> _onAppProtegidoTap() async {
+    final senha = await showDialog<String>(
+      context: context,
+      builder: (_) => PasswordDialog(password: _senha),
+    );
+    
+    if (senha != null) {
+      setState(() {
+        _senha = senha; 
+        _appProtegido = true; 
+      });
+    } else {
+      setState(() {
+        _appProtegido = false;
+      });
+    }
   }
 
   // ===== UI =====
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Configurações')),
+      backgroundColor: Colors.grey[100],
+      appBar: AppBar(
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text(
+          'Configurações',
+          style: TextStyle(color: Colors.white),
+          textAlign: TextAlign.center,
+        ),
+        backgroundColor: Colors.black,
+      ),
       body: Column(
         children: [
           Padding(padding: const EdgeInsets.all(12), child: _buildSearchBar()),

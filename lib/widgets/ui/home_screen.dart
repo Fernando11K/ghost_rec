@@ -23,20 +23,28 @@ class _HomeScreenState extends State<HomeScreen> {
   bool isRecording = false;
 
   @override
-  Widget build(BuildContext context) {    
+  Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        centerTitle: true,        
-        backgroundColor: Colors.black,        
-        title: Text(widget.title, style: TextStyle(color: Colors.white)),        
+        centerTitle: true,
+        backgroundColor: Colors.black,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset('assets/icon/ghostrec_logo.png', height: 35),
+            const SizedBox(width: 8),
+            const Text('GhostRec', style: TextStyle(color: Colors.white)),
+          ],
+        ),
+
         leading: PopupMenuButton<String>(
           icon: const Icon(Icons.more_vert, color: Colors.white, size: 35),
           offset: const Offset(0, 55),
 
-          onSelected: (value) {                        
-            if (value == 'settings') {              
+          onSelected: (value) {
+            if (value == 'settings') {
               Navigator.pushNamed(context, "/settings");
-            } else if (value == 'recordings') {              
+            } else if (value == 'recordings') {
               print('Informações selecionadas');
             }
           },
