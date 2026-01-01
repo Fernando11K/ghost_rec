@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ghost_rec/core/security/app_security.dart';
 import 'package:ghost_rec/utils/labels.dart';
 import 'package:ghost_rec/widgets/ui/settings/dialog/duration_dialog.dart';
 import 'package:ghost_rec/widgets/ui/settings/dialog/password_dialog.dart';
@@ -26,9 +27,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _dispositivoLigado = false;
   String _pesquisa = '';
   bool _appProtegido = false;
-  String _senha = '';
 
   Timer? _debounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSecurity();
+  }
 
   void _onSearchChanged(String value) {
     _debounce?.cancel();
@@ -45,6 +51,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
+  List<Widget> get listaFiltrada {
+    if (_pesquisa.isEmpty) return listaDeConfiguracoes;
+
+    final termo = _pesquisa.toLowerCase();
+
+    return listaDeConfiguracoes
+        .map((widget) {
+          if (widget is SettingsGroup) {
+            final itensFiltrados = widget.children.where((child) {
+              if (child is SettingsItem) {
+                return child.title.toLowerCase().contains(termo);
+              }
+              if (child is CheckboxListTile) {
+                final text = (child.title as Text?)?.data ?? '';
+                return text.toLowerCase().contains(termo);
+              }
+              return false;
+            }).toList();
+
+            if (itensFiltrados.isEmpty) return null;
+
+            return SettingsGroup(children: itensFiltrados);
+          }
+
+          return null;
+        })
+        .whereType<Widget>()
+        .toList();
+  }
   List<Widget> get listaDeConfiguracoes => [
     // GERAL
     SettingsGroup(
@@ -60,7 +95,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: Icons.crop_original,
           title: 'Tamanho da pré-visualização',
           subtitle: '($_tamanhoPrevisualizacao)',
-          onTap: _showTamanhoDialog,
+          onTap: _showDialogSize,
           iconColor: Colors.deepPurpleAccent,
         ),
       ],
@@ -136,35 +171,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ),
   ];
 
-  List<Widget> get listaFiltrada {
-    if (_pesquisa.isEmpty) return listaDeConfiguracoes;
 
-    final termo = _pesquisa.toLowerCase();
-
-    return listaDeConfiguracoes
-        .map((widget) {
-          if (widget is SettingsGroup) {
-            final itensFiltrados = widget.children.where((child) {
-              if (child is SettingsItem) {
-                return child.title.toLowerCase().contains(termo);
-              }
-              if (child is CheckboxListTile) {
-                final text = (child.title as Text?)?.data ?? '';
-                return text.toLowerCase().contains(termo);
-              }
-              return false;
-            }).toList();
-
-            if (itensFiltrados.isEmpty) return null;
-
-            return SettingsGroup(children: itensFiltrados);
-          }
-
-          return null;
-        })
-        .whereType<Widget>()
-        .toList();
-  }
 
   void _showlanguageDialog() {
     showRadioDialog(
@@ -181,7 +188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showTamanhoDialog() {
+  void _showDialogSize() {
     showRadioDialog(
       context: context,
       title: 'Tamanho da visualização',
@@ -231,18 +238,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _onAppProtegidoTap() async {
     final senha = await showDialog<String>(
       context: context,
-      builder: (_) => PasswordDialog(password: _senha),
+      barrierDismissible: false,
+      builder: (_) => PasswordDialog(
+        title: _appProtegido
+            ? 'Digite a senha para remover a proteção'
+            : 'Criar senha de proteção',
+        modo: _appProtegido ? ModoSenha.validar : ModoSenha.criar,
+        validarSenha: _appProtegido ? (s) => AppSecurity.validarSenha(s) : null,
+      ),
     );
-    
-    if (senha != null) {
-      setState(() {
-        _senha = senha; 
-        _appProtegido = true; 
-      });
+
+    if (senha == null || senha.isEmpty) return;
+
+    if (_appProtegido) {
+      await AppSecurity.removerSenha();
+      setState(() => _appProtegido = false);
     } else {
-      setState(() {
-        _appProtegido = false;
-      });
+      await AppSecurity.salvarSenha(senha);
+      setState(() => _appProtegido = true);
     }
   }
 
@@ -288,5 +301,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       leading: const Icon(Icons.search),
       onChanged: _onSearchChanged,
     );
+  }
+
+  Future<void> _loadSecurity() async {
+    final protegido = await AppSecurity.isProtegido();
+
+    if (!mounted) return;
+
+    setState(() {
+      _appProtegido = protegido;
+    });
   }
 }
