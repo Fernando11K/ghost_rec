@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:ghost_rec/constants/languages.dart';
 import 'package:ghost_rec/core/security/app_security.dart';
-import 'package:ghost_rec/utils/labels.dart';
 import 'package:ghost_rec/widgets/ui/settings/dialog/duration_dialog.dart';
 import 'package:ghost_rec/widgets/ui/settings/dialog/password_dialog.dart';
 import 'package:ghost_rec/widgets/ui/settings/dialog/radio_dialog.dart';
@@ -36,6 +36,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _loadSecurity();
   }
 
+  @override
+  void dispose() {
+    _debounce?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadSecurity() async {
+    final protegido = await AppSecurity.isProtegido();
+
+    if (!mounted) return;
+
+    setState(() {
+      _appProtegido = protegido;
+    });
+  }
+
   void _onSearchChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 500), () {
@@ -43,12 +59,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _pesquisa = value.toLowerCase();
       });
     });
-  }
-
-  @override
-  void dispose() {
-    _debounce?.cancel();
-    super.dispose();
   }
 
   List<Widget> get listaFiltrada {
@@ -80,6 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         .whereType<Widget>()
         .toList();
   }
+
   List<Widget> get listaDeConfiguracoes => [
     // GERAL
     SettingsGroup(
@@ -87,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         SettingsItem(
           icon: Icons.language,
           title: 'Idioma',
-          subtitle: languageLabel(_idioma),
+          subtitle: languageOptions[_idioma],
           onTap: _showlanguageDialog,
           iconColor: Colors.blue,
         ),
@@ -171,19 +182,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     ),
   ];
 
-
-
   void _showlanguageDialog() {
     showRadioDialog(
       context: context,
       title: 'Idioma',
       value: _idioma,
-      options: const {
-        'pt_BR': 'Português (Portuguese)',
-        'gn_BR': "Português de Portugal (Brazilian Guyanese)",
-        'en_US': 'Inglês (English)',
-        'es_ES': 'Espanhol (Spanish)',
-      },
+      options: languageOptions,
       onChanged: (v) => setState(() => _idioma = v),
     );
   }
@@ -301,15 +305,5 @@ class _SettingsScreenState extends State<SettingsScreen> {
       leading: const Icon(Icons.search),
       onChanged: _onSearchChanged,
     );
-  }
-
-  Future<void> _loadSecurity() async {
-    final protegido = await AppSecurity.isProtegido();
-
-    if (!mounted) return;
-
-    setState(() {
-      _appProtegido = protegido;
-    });
   }
 }

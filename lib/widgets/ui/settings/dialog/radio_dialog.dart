@@ -13,7 +13,7 @@ Future<void> showRadioDialog({
       return AlertDialog(
         title: Text(
           title,
-          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
         content: RadioGroup<String>(
@@ -32,6 +32,7 @@ Future<void> showRadioDialog({
                       e.value,
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 14),
                     ),
                   ),
                 )
